@@ -1,9 +1,16 @@
 from market import Market
-
+from pprint import pprint
 
 
 m = Market()
 
-m.get_my_securities()
+print "My Securities:"
 
-m.get_cash()
+pprint(m.get_my_securities())
+
+print "\nCash:",
+print m.get_cash()
+print ""
+
+print "All Securities:"
+pprint(m.get_securities())

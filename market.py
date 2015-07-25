@@ -21,9 +21,13 @@ def run(*commands):
         sfile = sock.makefile()
         rline = sfile.readline()
         while rline:
-            print(rline.strip())
+            # print(rline.strip())
             return_lines.append(rline.strip())
             rline = sfile.readline()
+    except KeyboardInterrupt:
+      raise
+    except:
+      print "Warning: network failed"
     finally:
         sock.close()
 
