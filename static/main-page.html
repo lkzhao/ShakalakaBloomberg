@@ -1,0 +1,220 @@
+<link rel="import" href="bower_components/polymer/polymer.html">
+<link rel="import" href="bower_components/neon-animation/neon-animation.html">
+<link rel="import" href="bower_components/paper-material/paper-material.html">
+<link rel="import" href="bower_components/paper-header-panel/paper-header-panel.html">
+<link rel="import" href="bower_components/paper-toolbar/paper-toolbar.html">
+<link rel="import" href="bower_components/paper-item/paper-item.html">
+<link rel="import" href="bower_components/paper-tabs/paper-tabs.html">
+
+<link rel="import" href="bower_components/iron-pages/iron-pages.html">
+
+<dom-module id="main-page">
+  <style>
+    paper-toolbar{
+      background: #34495e;
+    }
+    .global{
+      position: fixed;
+      font-size: 0;
+    }
+    .tickie{
+      width:20%;
+      height:50%;
+      display: inline-block;
+      box-sizing: border-box;
+      /*margin:5px;*/
+      font-size: 12px;
+      background: #40d47e;
+      padding: 15px;
+      border-bottom: 1px solid #666;
+      border-right: 1px solid #666;
+    }
+    .tickie small{
+      float:right;
+      color:white;
+    }
+    paper-item-body{
+      width:100%;
+    }
+    .info{
+      width:100%;
+      margin-bottom: 5px;
+    }
+    .info div{
+      display:inline-block;
+    }
+    .bold{
+      font-weight: 700;
+      float:right;
+    }
+    .marketprice{
+      height:100px;
+    }
+  </style>
+  <template>
+    <paper-header-panel class="flex">
+      <paper-toolbar>
+        <div>My Cash: <span>{{mycash}}</span></div>
+      </paper-toolbar>
+      <div class="global flex">
+        <template is="dom-repeat" items="{{_toArray(securities)}}">
+          <div class="tickie">
+            <h1>{{item.name}}<small>{{_toFixed(item.0)}}</small></h1>
+            <div class="info">
+                <div>Divident Ratio</div>
+                <div secondary class="bold">{{item.1}}</div>
+            </div>
+            <div class="info">
+                <div>Volatility</div>
+                <div secondary class="bold">{{item.2}}</div>
+            </div>
+            <div class="info">
+                <div>My Shares</div>
+                <div secondary class="bold">{{getmyshare(item.name)}}</div>
+            </div>
+            <div class="info">
+                <div>My Dividend Ratio</div>
+                <div secondary class="bold">{{getdividend(item.name)}}</div>
+            </div>
+            <div class="info marketprice">
+                <paper-tabs selected="{{item.selected}}">
+                  <paper-tab>BID</paper-tab>
+                  <paper-tab>ASK</paper-tab>
+                </paper-tabs>
+                <iron-pages selected="{{item.selected}}">
+                  <div>
+                    <template is="dom-repeat" items="{{getbidorders(orders, item.name)}}">
+                      <div class="layout horizontal wrap">
+                        <div>{{item.share}}</div>
+                        <div>{{item.price}}</div>
+                      </div>
+                    </template>
+                  </div>
+                  <div>
+                    <template is="dom-repeat" items="{{getaskorders(orders, item.name)}}">
+                      <div class="layout horizontal wrap">
+                        <div>{{item.share}}</div>
+                        <div>{{item.price}}</div>
+                      </div>
+                    </template>
+                  </div>
+                </iron-pages>
+            </div>
+          </div>
+        </template>
+      </div>
+    </paper-header-panel>
+  </template>
+</dom-module>
+
+<script>
+  // register a new element called sidebar-element
+  Polymer({
+    is: "main-page",
+    properties: {
+      orders:{
+        type:Object,
+        value:{}
+      },
+      page:{
+        type:String,
+        value:"chat"
+      },
+      params:{
+        type:Object,
+        observer: 'paramsChanged'
+      }
+    },
+
+    getmyshare:function(tickie){
+      return this.mysecurities[tickie][0]
+    },
+
+    getdividend:function(tickie){
+      return this.mysecurities[tickie][1]
+    },
+    getbidorders:function(orders, tickie){
+      console.log(this.orders)
+      if(!this.orders[tickie]){
+        return []
+      }
+      var bido = this.orders[tickie].filter(function(data){
+        return data[0]=="BID"
+      }).map(function(data){
+        return {share:data[1], price:data[2]}
+      })
+      console.log(bido)
+      return bido
+    },
+    getaskorders:function(orders, tickie){
+      if(!this.orders[tickie]){
+        return []
+      }
+      return this.orders[tickie].filter(function(data){
+        return data[0]=="ASK"
+      }).map(function(data){
+        return {share:data[3], price:data[2]}
+      })
+    },
+
+    _toFixed: function(f){
+      return f.toFixed(2)
+    },
+    _toArray: function(obj) {
+      return Object.keys(obj).map(function(key) {
+        obj[key].name = key
+        return obj[key]
+      });
+    },
+
+    paramsChanged:function(e){
+      console.log(this.params)
+    },
+
+    ready: function() {
+      this.reload()
+      setInterval(this.reload.bind(this), 10000)
+    },
+
+    reload:function(){
+      var that = this
+      $.ajax({
+        url: "/data",
+        cache: false,
+        contentType: false,
+        processData: false,
+        type: 'GET'
+      }).done(function(data) {
+        // console.log(data)
+        that.set("orders",{})
+        that.set("securities", data.securities)
+        that.set("mycash", data.mycash)
+        that.set("mysecurities", data.mysecurities)
+        that.set("myorders", data.myorders)
+        Object.keys(data.securities).map(function(key) {
+          that.queryOrders(key)
+        });
+      }).fail(function() {
+        console.log("Failed AJAX to get /data")
+      });
+    },
+    queryOrders: function(tickie){
+      var that = this
+      $.ajax({
+        url: "/orders/"+tickie,
+        cache: false,
+        contentType: false,
+        processData: false,
+        type: 'GET'
+      }).done(function(data) {
+        console.log("Orders "+data.orders)
+        $.extend(that.orders, data.orders)
+        that.set("orders", that.orders)
+      }).fail(function() {
+        console.log("Failed AJAX to get /data")
+      });
+    },
+
+  });
+
+</script>
