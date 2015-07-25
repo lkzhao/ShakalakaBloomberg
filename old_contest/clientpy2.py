@@ -59,8 +59,8 @@ def subscribe():
     sock.close()
 
 
-OUR_USERNAME = "/dev/rand_AB"
-OUR_PASSWORD = "pi<4"
+OUR_USERNAME = "Shakalaka"
+OUR_PASSWORD = "sky199"
 
 securities = {}
 orders = {}
@@ -400,7 +400,7 @@ sell_stock("TSX")
 sell_stock("YUM")
 """
 
-autorun()
+# autorun()
 #print run("SECURITIES")
 
 
