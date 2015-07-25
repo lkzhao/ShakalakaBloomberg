@@ -109,7 +109,29 @@ class Market:
             self.get_orders(k)
         return self.orders
 
-    def buy_stock(self, stock, share=-1):
+    def bid(self, stock, price, share=-1):
+        # Buy the specified number of shares, or with all our money if -1
+        self.get_cash()
+        if share == -1:
+            num_shares = int(self.my_cash / price)
+        else:
+            num_shares = share
+
+        print "Biding %s: %d shares at %f" % (stock, num_shares, price)
+        run("BID %s %f %d" % (stock, price, num_shares))
+
+    def ask(self, stock, price, share=-1):
+        # Buy the specified number of shares, or with all our money if -1
+        self.get_my_securities()
+        if share == -1:
+            num_shares = int(self.my_securities[stock][0])
+        else:
+            num_shares = share
+
+        print "Asking %s: %d shares at %f" % (stock, num_shares, price)
+        run("ASK %s %f %d"% (stock, price, num_shares))
+
+    def buy_stock(self, stock, share=-1, money=-1):
         """
         Buy the specified number of shares, or with all our money if -1
 
@@ -127,7 +149,12 @@ class Market:
 
             # assume we can buy at cur_sell
             buying_price = cur_sell + 0.1
-            num_shares = int(self.my_cash / buying_price)
+
+            available_money = self.my_cash
+            if money != -1 and money < available_money:
+                available_money = money
+
+            num_shares = int(available_money / buying_price)
 
             if num_shares < 2:
                 break
@@ -138,6 +165,7 @@ class Market:
             print "Buying %s: %d shares at %f" % (stock, num_shares, buying_price)
             run("BID %s %f %d" % (stock, buying_price, num_shares))
             share -= num_shares
+            money -= num_shares * buying_price
 
     def bid(self, stock, share, price):
         run("BID %s %f %d" % (stock, price, share))
@@ -173,4 +201,40 @@ class Market:
             print "Selling %s: %d shares at %f" % (stock, num_shares, selling_price)
             run("ASK %s %f %d"% (stock, selling_price, num_shares))
             share -= num_shares
+
+
+class Stock:
+    name = ""
+    last_bought = 0
+    last_sold = 0
+    networth_history = []
+    volatility = 0
+    dividend = 0
+
+    # def set_data(self):
+    #     inp = run("SECURITIES")[0].split()[1:]
+    #     securities = []
+    #     for i in range(len(inp)/4):
+    #         securities[inp[4*i]] = (float(inp[4*i+1]), float(inp[4*i+2]), float(inp[4*i+3]))
+    #         self.volatility = securities[self.name][2]
+    #         self.dividend = securities[self.name][1]
+
+    def __init__(self, name, dividend, volatility):
+        self.name = name
+        self.dividend = dividend
+        self.volatility = volatility
+
+    def get_earning(self):
+        length = len(self.networth_history)
+        first_period = int (length - 1 - self.volatility * 2000)
+        if first_period < 0:
+            return 0
+        else:
+            last_networth = self.networth_history[length-1]
+            first_networth = self.networth_history[first_period]
+            if last_networth > first_networth:
+                return (last_networth - first_networth) / first_networth
+            else:
+                return 0
+
 
