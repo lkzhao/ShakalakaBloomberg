@@ -127,8 +127,12 @@ def auto_run():
             securities = sorted(securities)
             securities.reverse()
 
+            # for val, sec in securities:
+            #     if m.my_securities[sec][0] == 0 and (stocks[sec].last_sold == 0 or stocks[sec].last_sold + REGENERATION_TIME < count):
+            #         stocks[sec].buy_price = buy_stock(sec)
+            #         break
             for val, sec in securities:
-                if m.my_securities[sec][0] == 0 and stocks[sec].last_sold == 0 or stocks[sec].last_sold + REGENERATION_TIME < count:
+                if m.my_securities[sec][0] == 0:
                     stocks[sec].buy_price = buy_stock(sec)
                     break
 
