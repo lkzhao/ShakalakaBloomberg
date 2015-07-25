@@ -180,7 +180,7 @@ class Market:
             if num_shares > share and share != -1:
                 num_shares = share
 
-            if num_shares == 0:
+            if num_shares <= 0:
                 break
 
             print "Selling %s: %d shares at %f" % (stock, num_shares, selling_price)
@@ -192,34 +192,25 @@ class Stock:
     name = ""
     last_bought = 0
     last_sold = 0
-    networth_history = []
+    # networth_history = []
     volatility = 0
     dividend = 0
+    shares = 0
 
-    # def set_data(self):
-    #     inp = run("SECURITIES")[0].split()[1:]
-    #     securities = []
-    #     for i in range(len(inp)/4):
-    #         securities[inp[4*i]] = (float(inp[4*i+1]), float(inp[4*i+2]), float(inp[4*i+3]))
-    #         self.volatility = securities[self.name][2]
-    #         self.dividend = securities[self.name][1]
+    def set_data(self):
+        inp = run("ORDERS " + self.name)[0].split()[1:]
+        shares = 0
+        for i in range(len(inp)/4):
+            shares += int(inp[4*i+3])
+        self.shares = shares
 
     def __init__(self, name, dividend, volatility):
         self.name = name
         self.dividend = dividend
         self.volatility = volatility
+        self.set_data()
 
-    def get_earning(self):
-        length = len(self.networth_history)
-        first_period = int (length - 1 - self.volatility * 2000)
-        if first_period < 0:
-            return 0
-        else:
-            last_networth = self.networth_history[length-1]
-            first_networth = self.networth_history[first_period]
-            if last_networth > first_networth:
-                return (last_networth - first_networth) / first_networth
-            else:
-                return 0
+    def get_dividend_ratio_per_share(self):
+        return (self.dividend / self.shares)
 
 
