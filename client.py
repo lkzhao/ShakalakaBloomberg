@@ -15,7 +15,7 @@ DIVIDENDS_THRESHOLD = 0.00002
 selling = []
 def sell_stock(stock):
     global selling
-    m.get_my_securities()
+    m.get_my_orders()
     m.get_orders(stock)
     this_ord = m.orders[stock]
 
@@ -24,6 +24,10 @@ def sell_stock(stock):
 
     _, cur_sell = get_buy_and_sell_prices(this_ord)
     want_price = cur_sell - 0.02
+    if stock in m.my_orders:
+        m,p,s = m.my_orders[stock]
+        if m == "ASK" and cur_sell == p:#we are the lowerest
+            return
 
     num_shares = int(m.my_securities[stock][0])
     print "ASK %s: %d shares at %f" % (stock, num_shares, want_price)
