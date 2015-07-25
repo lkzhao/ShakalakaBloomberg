@@ -7,6 +7,10 @@
 <link rel="import" href="bower_components/paper-tabs/paper-tabs.html">
 
 <link rel="import" href="bower_components/iron-pages/iron-pages.html">
+<link rel="import" href="bower_components/paper-button/paper-button.html">
+<link rel="import" href="bower_components/paper-input/paper-input.html">
+
+
 
 <dom-module id="main-page">
   <style>
@@ -14,11 +18,12 @@
       background: #34495e;
     }
     .global{
-      position: fixed;
       font-size: 0;
+      width:880px;
+      margin:20px auto;
     }
     .tickie{
-      width:20%;
+      width: 200px;
       height:50%;
       display: inline-block;
       box-sizing: border-box;
@@ -26,14 +31,15 @@
       font-size: 12px;
       background: #40d47e;
       padding: 15px;
-      border-bottom: 1px solid #666;
-      border-right: 1px solid #666;
+      margin-right:20px;
+      margin-bottom:20px;
+      border-radius: 4px;
     }
     .tickie small{
       float:right;
       color:white;
     }
-    paper-item-body{
+    .fullwidth{
       width:100%;
     }
     .info{
@@ -43,137 +49,168 @@
     .info div{
       display:inline-block;
     }
-    .bold{
-      font-weight: 700;
-      float:right;
-    }
     .marketprice{
+      height:200px;
+      overflow: hidden;
+    }
+    hr{
+
+    }
+    .chart{
       height:100px;
     }
+
+    small{
+      margin-left: 50px;
+      color:white;
+    }
+    .bold{
+      font-size: 28px;
+      font-weight: 700;
+    }
+    .sub{
+      color:#555;
+      margin-bottom: 20px;
+    }
+    .volatility{
+      float: right;
+    }
+    .volatility .sub{
+      float: right;
+    }
+    .mycash{
+      background: #1abc9c;
+    }
+
   </style>
   <template>
-    <paper-header-panel class="flex">
-      <paper-toolbar>
-        <div>My Cash: <span>{{mycash}}</span></div>
-      </paper-toolbar>
       <div class="global flex">
         <template is="dom-repeat" items="{{_toArray(securities)}}">
-          <div class="tickie">
-            <h1>{{item.name}}<small>{{_toFixed(item.0)}}</small></h1>
-            <div class="info">
-                <div>Divident Ratio</div>
-                <div secondary class="bold">{{item.1}}</div>
-            </div>
-            <div class="info">
-                <div>Volatility</div>
-                <div secondary class="bold">{{item.2}}</div>
-            </div>
-            <div class="info">
-                <div>My Shares</div>
-                <div secondary class="bold">{{getmyshare(item.name)}}</div>
-            </div>
-            <div class="info">
-                <div>My Dividend Ratio</div>
-                <div secondary class="bold">{{getdividend(item.name)}}</div>
-            </div>
-            <div class="info marketprice">
-                <paper-tabs selected="{{item.selected}}">
-                  <paper-tab>BID</paper-tab>
-                  <paper-tab>ASK</paper-tab>
-                </paper-tabs>
-                <iron-pages selected="{{item.selected}}">
-                  <div>
-                    <template is="dom-repeat" items="{{getbidorders(orders, item.name)}}">
-                      <div class="layout horizontal wrap">
-                        <div>{{item.share}}</div>
-                        <div>{{item.price}}</div>
-                      </div>
-                    </template>
-                  </div>
-                  <div>
-                    <template is="dom-repeat" items="{{getaskorders(orders, item.name)}}">
-                      <div class="layout horizontal wrap">
-                        <div>{{item.share}}</div>
-                        <div>{{item.price}}</div>
-                      </div>
-                    </template>
-                  </div>
-                </iron-pages>
-            </div>
-          </div>
+          <paper-material elevation="2" class="tickie" name="{{item.name}}" on-click="handleTickerClick">
+            <div class="chart" id="{{item.name}}"></div>
+            <h1>{{item.name}}<small>{{_toFixed(item.lastnetworth)}}</small></h1>
+          </paper-material>
         </template>
+        <paper-material elevation="2" class="tickie mycash" name="{{item.name}}" on-click="handleTickerClick">
+          <div class="chart"></div>
+          <h1>Cash<small>{{_toFixed(mycash)}}</small></h1>
+        </paper-material>
       </div>
-    </paper-header-panel>
   </template>
 </dom-module>
 
 <script>
   // register a new element called sidebar-element
+  colors = ["#1abc9c","#2ecc71","#3498db","#9b59b6","#34495e","#f1c40f","#e67e22","#e74c3c","#ecf0f1","#95a5a6"]
+
   Polymer({
     is: "main-page",
+    behaviors: [
+      Polymer.NeonSharedElementAnimatableBehavior
+    ],
     properties: {
-      orders:{
-        type:Object,
-        value:{}
+      animationConfig: {
+        type: Object,
+        value: function(){
+          return {
+            'exit': [{
+              name: 'hero-animation',
+              id: 'image',
+              fromPage: this
+            },{
+              name: 'ripple-animation',
+              id: 'background',
+              fromPage: this
+            }]
+          }
+        }
       },
-      page:{
-        type:String,
-        value:"chat"
-      },
-      params:{
-        type:Object,
-        observer: 'paramsChanged'
-      }
     },
 
-    getmyshare:function(tickie){
-      return this.mysecurities[tickie][0]
+    handleTickerClick:function(e){
+      var block = $(e.target).closest(".tickie")[0]
+      this.fire('ticker-open', {
+        security:this.getSecurity(block.name, this.securities),
+        sharedElements:{
+          'background': block,
+          'image': block
+        }
+      });
     },
 
-    getdividend:function(tickie){
-      return this.mysecurities[tickie][1]
-    },
-    getbidorders:function(orders, tickie){
-      console.log(this.orders)
-      if(!this.orders[tickie]){
-        return []
-      }
-      var bido = this.orders[tickie].filter(function(data){
-        return data[0]=="BID"
-      }).map(function(data){
-        return {share:data[1], price:data[2]}
-      })
-      console.log(bido)
-      return bido
-    },
-    getaskorders:function(orders, tickie){
-      if(!this.orders[tickie]){
-        return []
-      }
-      return this.orders[tickie].filter(function(data){
-        return data[0]=="ASK"
-      }).map(function(data){
-        return {share:data[3], price:data[2]}
-      })
+    getSecurity:function(name, securities){
+      console.log(name, securities)
+      securities[name].name = name
+      return securities[name]
     },
 
     _toFixed: function(f){
       return f.toFixed(2)
     },
+
     _toArray: function(obj) {
+      console.log(obj)
       return Object.keys(obj).map(function(key) {
         obj[key].name = key
         return obj[key]
       });
     },
 
-    paramsChanged:function(e){
-      console.log(this.params)
+    ready: function() {
+      this.reloadMyinfo()
+      this.reload()
+      setInterval(this.reload.bind(this), 3000)
+      setInterval(this.reloadMyinfo.bind(this), 10000)
     },
 
-    ready: function() {
-      this.reload()
-      setInterval(this.reload.bind(this), 10000)
+    updateSecurities:function(newS){
+      var that = this
+      var secur = this.securities || {}
+      for (var k in newS){
+        if(!secur[k]){
+          secur[k] = {
+            lastnetworth:newS[k][0],
+            networth:[newS[k][0]],
+            volatility:newS[k][2],
+            dividend:newS[k][1]
+          }
+        }else{
+          secur[k].networth.push(newS[k][0])
+          secur[k].lastnetworth = newS[k][0]
+        }
+      }
+      this.set("securities", secur)
+      this.fire("update", secur)
+      if(this.visible){
+        console.log("update charts")
+        this.updateAllCharts()
+      }
+    },
+
+    updateAllCharts:function(){
+      this.async(function(){
+        var count = 0
+        for (var k in this.securities){
+          var chart = c3.generate({
+            bindto: "#"+k,
+            size: {
+              height: 100
+            },
+            color:{
+              pattern: ["#ffffff"]
+            },
+            data: {
+              columns: [
+                ["Net Worth"].concat(this.securities[k].networth.slice(Math.max(0,this.securities[k].networth.length - 31), this.securities[k].networth.length))
+              ]
+            },
+            axis:{y:{show:false},x:{show:false}},
+            legend: { show: false }
+          });
+          count += 1;
+          this.securities[k].chart = chart
+        }
+      })
     },
 
     reload:function(){
@@ -186,34 +223,29 @@
         type: 'GET'
       }).done(function(data) {
         // console.log(data)
-        that.set("orders",{})
-        that.set("securities", data.securities)
-        that.set("mycash", data.mycash)
-        that.set("mysecurities", data.mysecurities)
-        that.set("myorders", data.myorders)
-        Object.keys(data.securities).map(function(key) {
-          that.queryOrders(key)
-        });
+        that.updateSecurities(data.securities)
       }).fail(function() {
         console.log("Failed AJAX to get /data")
       });
     },
-    queryOrders: function(tickie){
+
+    reloadMyinfo:function(){
       var that = this
       $.ajax({
-        url: "/orders/"+tickie,
+        url: "/myinfo",
         cache: false,
         contentType: false,
         processData: false,
         type: 'GET'
       }).done(function(data) {
-        console.log("Orders "+data.orders)
-        $.extend(that.orders, data.orders)
-        that.set("orders", that.orders)
+        // console.log(data)
+        that.set("mycash", data.mycash)
+        that.set("mysecurities", data.mysecurities)
+        that.set("myorders", data.myorders)
       }).fail(function() {
         console.log("Failed AJAX to get /data")
       });
-    },
+    }
 
   });
 

@@ -102,6 +102,11 @@ class Market:
         for i in range(len(inp)/4):
             out.append( (inp[4*i], inp[4*i+1], float(inp[4*i+2]), int(inp[4*i+3])) )
         self.orders[stock] = out
+        return out
+
+    def get_all_orders(self):
+        for k in self.securities.keys():
+            self.get_orders(k)
         return self.orders
 
     def buy_stock(self, stock, share=-1):
@@ -133,6 +138,12 @@ class Market:
             print "Buying %s: %d shares at %f" % (stock, num_shares, buying_price)
             run("BID %s %f %d" % (stock, buying_price, num_shares))
             share -= num_shares
+
+    def bid(self, stock, share, price):
+        run("BID %s %f %d" % (stock, price, share))
+
+    def ask(self, stock, share, price):
+        run("ASK %s %f %d" % (stock, price, share))
 
     def sell_stock(self, stock, share=-1):
         """

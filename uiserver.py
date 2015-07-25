@@ -1,18 +1,37 @@
-from flask import Flask,jsonify
+from flask import Flask,request,jsonify
 from market import Market
 app = Flask(__name__)
 
 app.debug = True
 m = Market()
 
-@app.route("/data")
-def data():
+@app.route("/orders")
+def orders():
+    return jsonify(**{
+        "orders":m.get_all_orders()
+        })
+
+@app.route("/myinfo")
+def myinfo():
     return jsonify(**{
         "mycash":m.get_cash(),
         "myorders":m.get_my_orders(),
         "mysecurities":m.get_my_securities(),
-        "securities":m.get_securities()
         })
+
+@app.route("/data")
+def data():
+    return jsonify(**{
+        "securities":m.get_securities(),
+        })
+
+@app.route('/bid', methods=['POST'])
+def bid():
+    m.bid(request.form['ticker'], request.form['shares'], request.form['price'])
+
+@app.route('/ask', methods=['POST'])
+def ask():
+    m.ask(request.form['ticker'], request.form['shares'], request.form['price'])
     # return jsonify(**{
     #           "mycash": 1500.0, 
     #           "myorders": {}, 
@@ -112,11 +131,7 @@ def data():
     #           }
     #         })
 
-@app.route("/orders/<tickie>")
-def orders(tickie):
-    return jsonify(**{
-        "orders":m.get_orders(tickie)
-        })
 
 if __name__ == "__main__":
     app.run()
+
