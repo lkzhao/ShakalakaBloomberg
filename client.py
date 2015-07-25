@@ -17,7 +17,6 @@ def sell_stock(stock):
     global selling
 
     m.get_orders(stock)
-    m.get_my_orders()
     this_ord = m.orders[stock]
 
     if stock not in selling:
@@ -34,11 +33,36 @@ def sell_stock(stock):
     print "ASK %s: %d shares at %f" % (stock, num_shares, want_price)
     m.run("ASK %s %f %d"% (stock, want_price, num_shares))
 
+buying = []
+def buy_stock(stock):
+    global buying
+
+    m.get_orders(stock)
+    this_ord = m.orders[stock]
+
+    if stock not in buying:
+        buying.append(stock)
+
+    cur_buy, _ = get_buy_and_sell_prices(this_ord)
+    want_price = cur_buy + 0.02
+    if stock in m.my_orders:
+        method,p,s = m.my_orders[stock]
+        print m.my_orders[stock]
+        if method == "BID" and cur_buy == p:#we are the highest
+            return
+
+    num_shares = int(m.my_securities[stock][0])
+    print "BID %s: %d shares at %f" % (stock, num_shares, want_price)
+    m.run("BID %s %f %d"% (stock, want_price, num_shares))
+    return want_price
+
 def auto_run():
     global selling
+    global buying
     # history = []
 
     m.get_cash()
+    m.get_my_orders()
     initial_cash = deepcopy(m.my_cash)
     count = 0
 
@@ -70,6 +94,11 @@ def auto_run():
                 print "Sold "+sec
                 stocks[sec].last_sold = count
                 selling.remove(sec)
+        for sec in buying:
+            if m.my_securities[sec][0]==0:
+                print "Bought "+sec
+                stocks[sec].last_bought = count
+                buying.remove(sec)
 
         # if not holding enough stocks, buy some
         if num_owned < NUMBER_OF_STOCKS and m.my_cash > 200:
@@ -94,9 +123,8 @@ def auto_run():
             securities.reverse()
 
             for val, sec in securities:
-                if stocks[sec].last_sold == 0 or stocks[sec].last_sold + REGENERATION_TIME < count:
-                    m.buy_stock(sec, money=initial_cash/(NUMBER_OF_STOCKS-1))
-                    stocks[sec].last_bought = count
+                if m.my_securities[sec][0] == 0 and stocks[sec].last_sold == 0 or stocks[sec].last_sold + REGENERATION_TIME < count:
+                    stocks[sec].buy_price = buy_stock(sec)
                     break
 
 
