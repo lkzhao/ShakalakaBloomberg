@@ -45,7 +45,6 @@ def buy_stock(stock):
 
     cur_buy, _ = get_buy_and_sell_prices(this_ord)
     want_price = cur_buy + 0.02
-    print m.my_orders
     if stock in m.my_orders:
         method,p,s = m.my_orders[stock]
         if method == "BID" and cur_buy == p:#we are the highest
@@ -115,10 +114,17 @@ def auto_run():
                 m.get_orders(sec)
                 this_ord = m.orders[sec]
                 bp, sp = get_buy_and_sell_prices(this_ord)
-                n = m.my_cash / sp
-                dividend = n * val[0] * stocks[sec].get_dividend_ratio_per_share()
-                securities.append((dividend, sec))
 
+                # bid-ask dif strat
+                dif = (sp - bp) / ((sp + bp) / 2)
+
+                securities.append((dif, sec))
+
+
+                # dividends strat
+                # n = m.my_cash / sp
+                # dividend = n * val[0] * stocks[sec].get_dividend_ratio_per_share()
+                # securities.append((dividend, sec))
             securities = sorted(securities)
             securities.reverse()
 
@@ -127,10 +133,17 @@ def auto_run():
                     stocks[sec].buy_price = buy_stock(sec)
                     break
 
-
-        for sec, val in m.my_securities.iteritems():
-            if val[0] > 0 and (count - stocks[sec].last_bought) > HOLDING_TIME and val[1] < DIVIDENDS_THRESHOLD:
-                sell_stock(sec)
+        #
+        #     for val, sec in securities:
+        #         if stocks[sec].last_sold == 0 or stocks[sec].last_sold + REGENERATION_TIME < count:
+        #             m.buy_stock(sec, money=initial_cash/(NUMBER_OF_STOCKS-1))
+        #             stocks[sec].last_bought = count
+        #             break
+        #
+        #
+        # for sec, val in m.my_securities.iteritems():
+        #     if val[0] > 0 and (count - stocks[sec].last_bought) > HOLDING_TIME and val[1] < DIVIDENDS_THRESHOLD:
+        #         sell_stock(sec)
 
         # except:
         #     print "network error"
