@@ -140,6 +140,10 @@ def auto_run():
         #             break
         #
         #
+        for sec, val in m.my_securities.iteritems():
+            if val[0] > 0 and val[1] < DIVIDENDS_THRESHOLD:
+                sell_stock(sec)
+
         # for sec, val in m.my_securities.iteritems():
         #     if val[0] > 0 and (count - stocks[sec].last_bought) > HOLDING_TIME and val[1] < DIVIDENDS_THRESHOLD:
         #         sell_stock(sec)
