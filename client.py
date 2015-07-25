@@ -37,6 +37,16 @@ def main():
                     m.sell_stock(var[1], int(var[2]))
                 else:
                     m.sell_stock(var[1])
+            elif var[0] == "bid":
+                if var[3]:
+                    m.bid(var[1], int(var[2]), float(var[3]))
+                else:
+                    m.bid(var[1], int(var[2]))
+            elif var[0] == "ask":
+                if var[3]:
+                    m.ask(var[1], int(var[2]), float(var[3]))
+                else:
+                    m.ask(var[1], int(var[2]))
 
         # current_time = datetime.now().second
         # if last_time != current_time:

@@ -14,7 +14,6 @@ def run(*commands):
 
     try:
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-
         sock.connect((HOST, PORT))
         sock.sendall(data)
         sfile = sock.makefile()
@@ -103,6 +102,28 @@ class Market:
             out.append( (inp[4*i], inp[4*i+1], float(inp[4*i+2]), int(inp[4*i+3])) )
         self.orders[stock] = out
         return self.orders
+
+    def bid(self, stock, price, share=-1):
+        # Buy the specified number of shares, or with all our money if -1
+        self.get_cash()
+        if share == -1:
+            num_shares = int(self.my_cash / price)
+        else:
+            num_shares = share
+
+        print "Biding %s: %d shares at %f" % (stock, num_shares, price)
+        run("BID %s %f %d" % (stock, price, num_shares))
+
+    def ask(self, stock, price, share=-1):
+        # Buy the specified number of shares, or with all our money if -1
+        self.get_my_securities()
+        if share == -1:
+            num_shares = int(self.my_securities[stock][0])
+        else:
+            num_shares = share
+
+        print "Asking %s: %d shares at %f" % (stock, num_shares, price)
+        run("ASK %s %f %d"% (stock, price, num_shares))
 
     def buy_stock(self, stock, share=-1):
         """
