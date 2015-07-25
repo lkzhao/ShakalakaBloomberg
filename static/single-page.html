@@ -131,8 +131,8 @@
           <template is="dom-repeat" items="{{getorders(security.name)}}">
             <div class="flex order">
               <em>{{item.method}}</em>
-              <div> <span>{{item.share}}</span> shares</div>
               <div class="toRight">$<span>{{_toFixed(item.price)}}</span></div>
+              <div> <span>{{item.share}}</span> shares</div>
             </div>
           </template>
         </div>
@@ -282,7 +282,7 @@
     },
 
     getdividend:function(tickie, mysecurities){
-      return (mysecurities && tickie)?mysecurities[tickie][1]:0
+      return (mysecurities && tickie)?mysecurities[tickie][1].toFixed(10):0
     },
 
     getorders:function(tickie){
@@ -293,7 +293,7 @@
         return {method:data[0], share:data[3], price:data[2]}
       })
     },
-
+    
     _toFixed: function(f){
       return f?f.toFixed(2):0
     },
