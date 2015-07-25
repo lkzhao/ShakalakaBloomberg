@@ -117,7 +117,6 @@ def auto_run():
 
                 # bid-ask dif strat
                 dif = (sp - bp) / ((sp + bp) / 2)
-
                 securities.append((dif, sec))
 
 
