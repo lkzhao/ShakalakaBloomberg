@@ -173,9 +173,6 @@
     ask:function(){
       $.ajax({
         url: "/ask",
-        cache: false,
-        contentType: false,
-        processData: false,
         data:{
           ticker:this.security.name,
           shares:this.shares,
@@ -191,9 +188,6 @@
     bid:function(){
       $.ajax({
         url: "/bid",
-        cache: false,
-        contentType: false,
-        processData: false,
         data:{
           ticker:this.security.name,
           shares:this.shares,

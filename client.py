@@ -6,7 +6,7 @@ from copy import deepcopy
 
 
 m = Market()
-NUMBER_OF_STOCKS = 3
+NUMBER_OF_STOCKS = 5
 HOLDING_TIME = 60
 REGENERATION_TIME = 120
 DIVIDENDS_THRESHOLD = 0.00002
@@ -27,7 +27,7 @@ def sell_stock(stock):
 
     num_shares = int(m.my_securities[stock][0])
     print "ASK %s: %d shares at %f" % (stock, num_shares, want_price)
-    run("ASK %s %f %d"% (stock, want_price, num_shares))
+    m.run("ASK %s %f %d"% (stock, want_price, num_shares))
 
 def auto_run():
     global selling
@@ -73,7 +73,6 @@ def auto_run():
             for sec, val in m.securities.iteritems():
                 stocks[sec].networth_history.append(val[0])
             # length = len(history)
-            m.get_my_securities()
             best_sec, min_gap, max_earning = "", 100, 0
 
 

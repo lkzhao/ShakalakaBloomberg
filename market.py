@@ -32,24 +32,6 @@ def run(*commands):
 
     return return_lines
 
-    def subscribe(user, password):
-        HOST, PORT = "codebb.cloudapp.net", 17429
-
-        data=user + " " + password + "\nSUBSCRIBE\n"
-
-        try:
-            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-
-            sock.connect((HOST, PORT))
-            sock.sendall(data)
-            sfile = sock.makefile()
-            rline = sfile.readline()
-            while rline:
-                print(rline.strip())
-                rline = sfile.readline()
-        finally:
-            sock.close()
-
 # Max buy and min sell prices
 def get_buy_and_sell_prices(order):
     cur_buy = 0
@@ -70,6 +52,9 @@ class Market:
     my_cash = 0
     my_securities = {}
     my_orders = {}
+
+    def run(self, *commands):
+        run(*commands)
 
     # Query all the securities
     def get_securities(self):
