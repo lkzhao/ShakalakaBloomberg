@@ -1,17 +1,110 @@
-from market import Market
+from market import Market, get_buy_and_sell_prices, Stock
 from pprint import pprint
 from datetime import datetime
 import time
+from copy import deepcopy
 
 
 m = Market()
+NUMBER_OF_STOCKS = 3
+HOLDING_TIME = 60
+REGENERATION_TIME = 120
+DIVIDENDS_THRESHOLD = 0.00002
+
+def auto_run():
+    # history = []
+
+    m.get_cash()
+    initial_cash = deepcopy(m.my_cash)
+    count = 0
+
+    m.get_securities()
+    stocks = {}
+    for sec, val in m.securities.iteritems():
+        stock = Stock(sec, val[1], val[2])
+        stocks[sec] = stock
+
+    while True:
+
+        # try:
+        m.get_my_securities()
+        m.get_cash()
+
+        print "Our cash: ",
+        print m.my_cash
+
+        print "Our securities: "
+        num_owned = 0
+        for sec, val in m.my_securities.iteritems():
+            if val[0] > 0:
+                print sec,
+                print val[0],
+                print val[1]
+                num_owned += 1
+
+        # if not holding enough stocks, buy some
+        if num_owned < NUMBER_OF_STOCKS and m.my_cash > 200:
+
+            securities = m.get_securities()
+
+            for sec, val in m.securities.iteritems():
+                stocks[sec].networth_history.append(val[0])
+            # length = len(history)
+            m.get_my_securities()
+            best_sec, min_gap, max_earning = "", 100, 0
+
+
+            for sec, val in m.my_securities.iteritems():
+                m.get_orders(sec)
+                this_ord = m.orders[sec]
+
+                cur_buy, cur_sell = get_buy_and_sell_prices(this_ord)
+                if (val[0]*cur_sell < initial_cash / NUMBER_OF_STOCKS) and ((stocks[sec].last_sold == 0) or\
+                    (stocks[sec].last_sold + REGENERATION_TIME < count)):
+                    earning = stocks[sec].get_earning()
+                    if cur_sell - cur_buy < min_gap:
+                        best_sec = sec
+                        min_gap = cur_sell - cur_buy
+                    # if earning > max_earning:
+                    #     best_sec = sec
+                    #     max_earning = earning
+            #         volatility = securities[sec][2]
+            #         first_period = length-1 - int(volatility*2000)
+            #         if first_period >= 0:
+            #             first_networth = history[first_period][sec][0]
+            #
+            #             last_networth = history[length-1][sec][0]
+            #
+            #             earning = (last_networth - first_networth) / first_networth
+            #             # print earning
+            #             if earning > max_earning:
+            #                 best_sec = sec
+            #                 max_earning = earning
+            # print best_sec,
+            # print max_earning
+            if best_sec:
+                m.buy_stock(best_sec, money=initial_cash/NUMBER_OF_STOCKS)
+                stocks[best_sec].last_bought = count
+
+        worst_sec, lowest_dividends = "", 1
+        for sec, val in m.my_securities.iteritems():
+            if val[0] > 0 and (count - stocks[sec].last_bought) > HOLDING_TIME and val[1] < lowest_dividends:
+                worst_sec = sec
+                lowest_dividends = val[1]
+        if lowest_dividends < DIVIDENDS_THRESHOLD:
+            m.sell_stock(worst_sec)
+            stocks[worst_sec].last_sold = count
+
+        # except:
+        #     print "network error"
+        count += 1
+        time.sleep(1)
+
+
+auto_run()
 
 def main():
-    # history = []
-    #
-    #
-    # count = 0
-    # last_time = 0
+
     while True:
         print "My Securities:"
 
@@ -28,22 +121,22 @@ def main():
         var = var.split(" ")
         if var:
             if var[0] == "b":
-                if var[2]:
+                if len(var) == 3:
                     m.buy_stock(var[1], int(var[2]))
                 else:
                     m.buy_stock(var[1])
             elif var[0] == "s":
-                if var[2]:
+                if len(var) == 3:
                     m.sell_stock(var[1], int(var[2]))
                 else:
                     m.sell_stock(var[1])
             elif var[0] == "bid":
-                if var[3]:
+                if len(var) == 4:
                     m.bid(var[1], int(var[2]), float(var[3]))
                 else:
                     m.bid(var[1], int(var[2]))
             elif var[0] == "ask":
-                if var[3]:
+                if len(var) == 4:
                     m.ask(var[1], int(var[2]), float(var[3]))
                 else:
                     m.ask(var[1], int(var[2]))
@@ -58,4 +151,4 @@ def main():
         #     break
         # time.sleep(100)
 
-main()
+# main()
