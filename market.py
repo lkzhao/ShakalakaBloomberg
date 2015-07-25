@@ -1,7 +1,6 @@
 
 import socket
 import sys
-import datetime
 
 
 user = "Shakalaka"
