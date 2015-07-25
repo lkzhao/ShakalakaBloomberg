@@ -45,13 +45,13 @@ def buy_stock(stock):
 
     cur_buy, _ = get_buy_and_sell_prices(this_ord)
     want_price = cur_buy + 0.02
+    print m.my_orders
     if stock in m.my_orders:
         method,p,s = m.my_orders[stock]
-        print m.my_orders[stock]
         if method == "BID" and cur_buy == p:#we are the highest
             return
 
-    num_shares = int(m.my_securities[stock][0])
+    num_shares = int(m.my_cash / NUMBER_OF_STOCKS / want_price)
     print "BID %s: %d shares at %f" % (stock, num_shares, want_price)
     m.run("BID %s %f %d"% (stock, want_price, num_shares))
     return want_price
@@ -95,7 +95,7 @@ def auto_run():
                 stocks[sec].last_sold = count
                 selling.remove(sec)
         for sec in buying:
-            if m.my_securities[sec][0]==0:
+            if m.my_securities[sec][0]>0:
                 print "Bought "+sec
                 stocks[sec].last_bought = count
                 buying.remove(sec)
