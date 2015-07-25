@@ -68,6 +68,7 @@ def auto_run():
         for sec in selling:
             if m.my_securities[sec][0]==0:
                 print "Sold "+sec
+                stocks[sec].last_sold = count
                 selling.remove(sec)
 
         # if not holding enough stocks, buy some
@@ -93,8 +94,9 @@ def auto_run():
             securities.reverse()
 
             for val, sec in securities:
-                if stocks[sec].last_bought == 0 or stocks[sec].last_sold + REGENERATION_TIME < count:
+                if stocks[sec].last_sold == 0 or stocks[sec].last_sold + REGENERATION_TIME < count:
                     m.buy_stock(sec, money=initial_cash/(NUMBER_OF_STOCKS-1))
+                    stocks[sec].last_bought = count
                     break
 
 
