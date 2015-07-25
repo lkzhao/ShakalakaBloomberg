@@ -57,9 +57,11 @@ def buy_stock(stock):
     m.run("BID %s %f %d"% (stock, want_price, num_shares))
     return want_price
 
+stocks = {}
 def auto_run():
     global selling
     global buying
+    global stocks
     # history = []
 
     m.get_cash()
@@ -67,7 +69,6 @@ def auto_run():
     initial_cash = deepcopy(m.my_cash)
     count = 0
 
-    stocks = {}
     for sec, val in m.securities.iteritems():
         stock = Stock(sec, val[1], val[2])
         stocks[sec] = stock

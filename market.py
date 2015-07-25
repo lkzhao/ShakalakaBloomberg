@@ -206,6 +206,7 @@ class Stock:
     volatility = 0
     dividend = 0
     shares = 0
+    buy_price = 0
 
     def set_data(self):
         inp = run("ORDERS " + self.name)[0].split()[1:]
