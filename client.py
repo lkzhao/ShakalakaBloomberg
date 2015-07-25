@@ -150,8 +150,12 @@ def auto_run():
         count += 0.5
         time.sleep(0.5)
 
-
-auto_run()
+while True:
+    try:
+        auto_run()
+    except Exception as e:
+        print e
+        time.sleep(1)
 
 def main():
 
