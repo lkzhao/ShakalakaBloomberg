@@ -70,44 +70,23 @@ def auto_run():
 
             securities = m.get_securities()
 
-            for sec, val in m.securities.iteritems():
-                stocks[sec].networth_history.append(val[0])
+            # for sec, val in m.securities.iteritems():
+            #     stocks[sec].networth_history.append(val[0])
             # length = len(history)
             m.get_my_securities()
-            best_sec, min_gap, max_earning = "", 100, 0
+            # best_sec, min_gap, max_earning = "", 100, 0
 
-
-            for sec, val in m.my_securities.iteritems():
+            securities = []
+            for sec, val in m.securities.iteritems():
                 m.get_orders(sec)
                 this_ord = m.orders[sec]
+                bp, sp = get_buy_and_sell_prices(this_ord)
+                n = m.my_cash / sp
+                dividend = n * val[0] * stocks[sec].get_dividend_ratio_per_share()
+                securities.append((dividend, sec))
 
-                cur_buy, cur_sell = get_buy_and_sell_prices(this_ord)
-                if (val[0]*cur_sell < initial_cash / NUMBER_OF_STOCKS) and ((stocks[sec].last_sold == 0) or\
-                    (stocks[sec].last_sold + REGENERATION_TIME < count)):
-                    earning = stocks[sec].get_earning()
-                    if cur_sell - cur_buy < min_gap:
-                        best_sec = sec
-                        min_gap = cur_sell - cur_buy
-                    # if earning > max_earning:
-                    #     best_sec = sec
-                    #     max_earning = earning
-            #         volatility = securities[sec][2]
-            #         first_period = length-1 - int(volatility*2000)
-            #         if first_period >= 0:
-            #             first_networth = history[first_period][sec][0]
-            #
-            #             last_networth = history[length-1][sec][0]
-            #
-            #             earning = (last_networth - first_networth) / first_networth
-            #             # print earning
-            #             if earning > max_earning:
-            #                 best_sec = sec
-            #                 max_earning = earning
-            # print best_sec,
-            # print max_earning
-            if best_sec:
-                m.buy_stock(best_sec, money=initial_cash/NUMBER_OF_STOCKS)
-                stocks[best_sec].last_bought = count
+            securities = sorted(securities)
+            securities.reverse()
 
         for sec, val in m.my_securities.iteritems():
             if val[0] > 0 and (count - stocks[sec].last_bought) > HOLDING_TIME and val[1] < DIVIDENDS_THRESHOLD:
