@@ -11,7 +11,26 @@ HOLDING_TIME = 60
 REGENERATION_TIME = 120
 DIVIDENDS_THRESHOLD = 0.00002
 
+
+selling = []
+def sell_stock(stock):
+    global selling
+    m.get_my_securities()
+    m.get_orders(stock)
+    this_ord = m.orders[stock]
+
+    if stock not in selling:
+        selling.append(stock)
+
+    _, cur_sell = get_buy_and_sell_prices(this_ord)
+    want_price = cur_sell - 0.02
+
+    num_shares = int(m.my_securities[stock][0])
+    print "ASK %s: %d shares at %f" % (stock, num_shares, want_price)
+    run("ASK %s %f %d"% (stock, want_price, num_shares))
+
 def auto_run():
+    global selling
     # history = []
 
     m.get_cash()
@@ -41,6 +60,10 @@ def auto_run():
                 print val[0],
                 print val[1]
                 num_owned += 1
+        for sec in selling:
+            if m.my_securities[sec][0]==0:
+                print "Sold "+sec
+                selling.remove(sec)
 
         # if not holding enough stocks, buy some
         if num_owned < NUMBER_OF_STOCKS and m.my_cash > 200:
@@ -86,14 +109,9 @@ def auto_run():
                 m.buy_stock(best_sec, money=initial_cash/NUMBER_OF_STOCKS)
                 stocks[best_sec].last_bought = count
 
-        worst_sec, lowest_dividends = "", 1
         for sec, val in m.my_securities.iteritems():
-            if val[0] > 0 and (count - stocks[sec].last_bought) > HOLDING_TIME and val[1] < lowest_dividends:
-                worst_sec = sec
-                lowest_dividends = val[1]
-        if lowest_dividends < DIVIDENDS_THRESHOLD:
-            m.sell_stock(worst_sec)
-            stocks[worst_sec].last_sold = count
+            if val[0] > 0 and (count - stocks[sec].last_bought) > HOLDING_TIME and val[1] < DIVIDENDS_THRESHOLD:
+                sell_stock(sec)
 
         # except:
         #     print "network error"
