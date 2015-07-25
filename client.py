@@ -83,7 +83,7 @@ def auto_run():
         print "Our cash: ",
         print m.my_cash
 
-        print "Our securities: "
+        print "Our securities: " + str(count)
         num_owned = 0
         for sec, val in m.my_securities.iteritems():
             if val[0] > 0:
@@ -129,7 +129,7 @@ def auto_run():
             securities.reverse()
 
             for val, sec in securities:
-                if m.my_securities[sec][0] == 0 and stocks[sec].last_sold == 0 or stocks[sec].last_sold + REGENERATION_TIME < count:
+                if m.my_securities[sec][0] < 1:
                     stocks[sec].buy_price = buy_stock(sec)
                     break
 
@@ -147,8 +147,8 @@ def auto_run():
 
         # except:
         #     print "network error"
-        count += 1
-        time.sleep(1)
+        count += 0.5
+        time.sleep(0.5)
 
 
 auto_run()
