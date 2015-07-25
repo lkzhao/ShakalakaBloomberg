@@ -1,0 +1,57 @@
+<link rel="import" href="/static/bower_components/polymer/polymer.html">
+<link rel="import" href="/static/bower_components/neon-animation/neon-animation.html">
+
+
+<link rel="import" href="/static/single-page.html">
+<link rel="import" href="/static/main-page.html">
+
+<dom-module id="app-main">
+  <style>
+  </style>
+  <template>
+    <neon-animated-pages selected="[[page]]" attr-for-selected="name">
+      <main-page on-ticker-open="handleTickerOpen" on-update="handleUpdate" id="mainpage" name="main" visible="{{isVisible(page)}}"></main-page>
+      <single-page security="{{security}}" name="single" id="single" on-close="handleDialogClose"></single-page>
+    </neon-animated-pages>
+  </template>
+</dom-module>
+
+<script>
+  Polymer({
+    is: "app-main",
+
+    properties: {
+      page:{
+        type:String,
+        value:"main"
+      }
+    },
+
+    isVisible:function(page){
+      return page=="main"
+    },
+
+    handleUpdate:function(page){
+      this.$.single.reload()
+      console.log("Update")
+    },
+
+    handleTickerOpen:function(e){
+      console.log(e.detail)
+      this.set("security", e.detail.security)
+      this.$.mainpage.sharedElements = e.detail.sharedElements
+      this.set('page',"single")
+    },
+
+    handleDialogClose: function(e){
+
+      this.set('page',"main")
+      this.$.mainpage.updateAllCharts()
+    },
+
+    ready: function() {
+      this.set('page',"main")
+    }
+  });
+
+</script>

@@ -335,7 +335,9 @@ def autorun():
     for sec, vl in my_securities.iteritems():
       we_hold = vl[0]
       if we_hold > 0:
-        if datetime.datetime.now() - time_bought[sec] > datetime.timedelta(seconds=90):
+        if sec not in time_bought:
+          smart_sell_1_iter(sec)
+        elif datetime.datetime.now() - time_bought[sec] > datetime.timedelta(seconds=90):
           smart_sell_1_iter(sec)
 
           # If we managed to sell something completely, update it
@@ -400,7 +402,7 @@ sell_stock("TSX")
 sell_stock("YUM")
 """
 
-# autorun()
+autorun()
 #print run("SECURITIES")
 
 

@@ -1,0 +1,252 @@
+<link rel="import" href="bower_components/polymer/polymer.html">
+<link rel="import" href="bower_components/neon-animation/neon-animation.html">
+<link rel="import" href="bower_components/paper-material/paper-material.html">
+<link rel="import" href="bower_components/paper-header-panel/paper-header-panel.html">
+<link rel="import" href="bower_components/paper-toolbar/paper-toolbar.html">
+<link rel="import" href="bower_components/paper-item/paper-item.html">
+<link rel="import" href="bower_components/paper-tabs/paper-tabs.html">
+
+<link rel="import" href="bower_components/iron-pages/iron-pages.html">
+<link rel="import" href="bower_components/paper-button/paper-button.html">
+<link rel="import" href="bower_components/paper-input/paper-input.html">
+
+
+
+<dom-module id="main-page">
+  <style>
+    paper-toolbar{
+      background: #34495e;
+    }
+    .global{
+      font-size: 0;
+      width:880px;
+      margin:20px auto;
+    }
+    .tickie{
+      width: 200px;
+      height:50%;
+      display: inline-block;
+      box-sizing: border-box;
+      /*margin:5px;*/
+      font-size: 12px;
+      background: #40d47e;
+      padding: 15px;
+      margin-right:20px;
+      margin-bottom:20px;
+      border-radius: 4px;
+    }
+    .tickie small{
+      float:right;
+      color:white;
+    }
+    .fullwidth{
+      width:100%;
+    }
+    .info{
+      width:100%;
+      margin-bottom: 5px;
+    }
+    .info div{
+      display:inline-block;
+    }
+    .marketprice{
+      height:200px;
+      overflow: hidden;
+    }
+    hr{
+
+    }
+    .chart{
+      height:100px;
+    }
+
+    small{
+      margin-left: 50px;
+      color:white;
+    }
+    .bold{
+      font-size: 28px;
+      font-weight: 700;
+    }
+    .sub{
+      color:#555;
+      margin-bottom: 20px;
+    }
+    .volatility{
+      float: right;
+    }
+    .volatility .sub{
+      float: right;
+    }
+    .mycash{
+      background: #1abc9c;
+    }
+
+  </style>
+  <template>
+      <div class="global flex">
+        <template is="dom-repeat" items="{{_toArray(securities)}}">
+          <paper-material elevation="2" class="tickie" name="{{item.name}}" on-click="handleTickerClick">
+            <div class="chart" id="{{item.name}}"></div>
+            <h1>{{item.name}}<small>{{_toFixed(item.lastnetworth)}}</small></h1>
+          </paper-material>
+        </template>
+        <paper-material elevation="2" class="tickie mycash" name="{{item.name}}" on-click="handleTickerClick">
+          <div class="chart"></div>
+          <h1>Cash<small>{{_toFixed(mycash)}}</small></h1>
+        </paper-material>
+      </div>
+  </template>
+</dom-module>
+
+<script>
+  // register a new element called sidebar-element
+  colors = ["#1abc9c","#2ecc71","#3498db","#9b59b6","#34495e","#f1c40f","#e67e22","#e74c3c","#ecf0f1","#95a5a6"]
+
+  Polymer({
+    is: "main-page",
+    behaviors: [
+      Polymer.NeonSharedElementAnimatableBehavior
+    ],
+    properties: {
+      animationConfig: {
+        type: Object,
+        value: function(){
+          return {
+            'exit': [{
+              name: 'hero-animation',
+              id: 'image',
+              fromPage: this
+            },{
+              name: 'ripple-animation',
+              id: 'background',
+              fromPage: this
+            }]
+          }
+        }
+      },
+    },
+
+    handleTickerClick:function(e){
+      var block = $(e.target).closest(".tickie")[0]
+      this.fire('ticker-open', {
+        security:this.getSecurity(block.name, this.securities),
+        sharedElements:{
+          'background': block,
+          'image': block
+        }
+      });
+    },
+
+    getSecurity:function(name, securities){
+      console.log(name, securities)
+      securities[name].name = name
+      return securities[name]
+    },
+
+    _toFixed: function(f){
+      return f.toFixed(2)
+    },
+
+    _toArray: function(obj) {
+      console.log(obj)
+      return Object.keys(obj).map(function(key) {
+        obj[key].name = key
+        return obj[key]
+      });
+    },
+
+    ready: function() {
+      this.reloadMyinfo()
+      this.reload()
+      setInterval(this.reload.bind(this), 3000)
+      setInterval(this.reloadMyinfo.bind(this), 10000)
+    },
+
+    updateSecurities:function(newS){
+      var that = this
+      var secur = this.securities || {}
+      for (var k in newS){
+        if(!secur[k]){
+          secur[k] = {
+            lastnetworth:newS[k][0],
+            networth:[newS[k][0]],
+            volatility:newS[k][2],
+            dividend:newS[k][1]
+          }
+        }else{
+          secur[k].networth.push(newS[k][0])
+          secur[k].lastnetworth = newS[k][0]
+        }
+      }
+      this.set("securities", secur)
+      this.fire("update", secur)
+      if(this.visible){
+        console.log("update charts")
+        this.updateAllCharts()
+      }
+    },
+
+    updateAllCharts:function(){
+      this.async(function(){
+        var count = 0
+        for (var k in this.securities){
+          var chart = c3.generate({
+            bindto: "#"+k,
+            size: {
+              height: 100
+            },
+            color:{
+              pattern: ["#ffffff"]
+            },
+            data: {
+              columns: [
+                ["Net Worth"].concat(this.securities[k].networth.slice(Math.max(0,this.securities[k].networth.length - 31), this.securities[k].networth.length))
+              ]
+            },
+            axis:{y:{show:false},x:{show:false}},
+            legend: { show: false }
+          });
+          count += 1;
+          this.securities[k].chart = chart
+        }
+      })
+    },
+
+    reload:function(){
+      var that = this
+      $.ajax({
+        url: "/data",
+        cache: false,
+        contentType: false,
+        processData: false,
+        type: 'GET'
+      }).done(function(data) {
+        // console.log(data)
+        that.updateSecurities(data.securities)
+      }).fail(function() {
+        console.log("Failed AJAX to get /data")
+      });
+    },
+
+    reloadMyinfo:function(){
+      var that = this
+      $.ajax({
+        url: "/myinfo",
+        cache: false,
+        contentType: false,
+        processData: false,
+        type: 'GET'
+      }).done(function(data) {
+        // console.log(data)
+        that.set("mycash", data.mycash)
+        that.set("mysecurities", data.mysecurities)
+        that.set("myorders", data.myorders)
+      }).fail(function() {
+        console.log("Failed AJAX to get /data")
+      });
+    }
+
+  });
+
+</script>
