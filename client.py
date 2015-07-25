@@ -67,7 +67,6 @@ def auto_run():
     initial_cash = deepcopy(m.my_cash)
     count = 0
 
-    m.get_securities()
     stocks = {}
     for sec, val in m.securities.iteritems():
         stock = Stock(sec, val[1], val[2])
