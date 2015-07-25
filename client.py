@@ -6,7 +6,7 @@ from copy import deepcopy
 
 
 m = Market()
-NUMBER_OF_STOCKS = 5
+NUMBER_OF_STOCKS = 4
 HOLDING_TIME = 60
 REGENERATION_TIME = 120
 DIVIDENDS_THRESHOLD = 0.00002
@@ -86,6 +86,11 @@ def auto_run():
 
             securities = sorted(securities)
             securities.reverse()
+
+            for val, sec in securities:
+                if stocks[sec].last_bought == 0 or stocks[sec].last_sold + REGENERATION_TIME < count:
+                    m.buy_stock(sec, money=initial_cash/(NUMBER_OF_STOCKS-1))
+
 
         for sec, val in m.my_securities.iteritems():
             if val[0] > 0 and (count - stocks[sec].last_bought) > HOLDING_TIME and val[1] < DIVIDENDS_THRESHOLD:
