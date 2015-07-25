@@ -15,8 +15,9 @@ DIVIDENDS_THRESHOLD = 0.00002
 selling = []
 def sell_stock(stock):
     global selling
-    m.get_my_orders()
+
     m.get_orders(stock)
+    m.get_my_orders()
     this_ord = m.orders[stock]
 
     if stock not in selling:
@@ -25,8 +26,8 @@ def sell_stock(stock):
     _, cur_sell = get_buy_and_sell_prices(this_ord)
     want_price = cur_sell - 0.02
     if stock in m.my_orders:
-        m,p,s = m.my_orders[stock]
-        if m == "ASK" and cur_sell == p:#we are the lowerest
+        method,p,s = m.my_orders[stock]
+        if method == "ASK" and cur_sell == p:#we are the lowerest
             return
 
     num_shares = int(m.my_securities[stock][0])
@@ -94,6 +95,7 @@ def auto_run():
             for val, sec in securities:
                 if stocks[sec].last_bought == 0 or stocks[sec].last_sold + REGENERATION_TIME < count:
                     m.buy_stock(sec, money=initial_cash/(NUMBER_OF_STOCKS-1))
+                    break
 
 
         for sec, val in m.my_securities.iteritems():

@@ -6,29 +6,39 @@ import sys
 user = "Shakalaka"
 password = "sky199"
 
+
+HOST, PORT = "codebb.cloudapp.net", 17429
+sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+sock.connect((HOST, PORT))
+
+sock.sendall(user + " " + password + "\n")
+
+def closesock():
+    sock.sendall("CLOSE_CONNECTION\n")
+    sock.close()
+
+import atexit
+atexit.register(closesock)
+
 def run(*commands):
-    HOST, PORT = "codebb.cloudapp.net", 17429
 
     return_lines = []
-    data=user + " " + password + "\n" + "\n".join(commands) + "\nCLOSE_CONNECTION\n"
+    data = "\n".join(commands) + "\n"
 
     try:
-        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-
-        sock.connect((HOST, PORT))
+        ret = ""
         sock.sendall(data)
-        sfile = sock.makefile()
-        rline = sfile.readline()
-        while rline:
-            # print(rline.strip())
-            return_lines.append(rline.strip())
-            rline = sfile.readline()
+        while True:
+            c = sock.recv(1)
+            if c == '\n' or c == '':
+                break
+            else:
+                ret += c
+        return [ret]
     except KeyboardInterrupt:
-      raise
+      closesock()
     except:
       print "Warning: network failed"
-    finally:
-        sock.close()
 
     return return_lines
 
